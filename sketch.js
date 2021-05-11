@@ -6,7 +6,7 @@
 // p5.js reference: https://p5js.org/reference/
 
 // Database (CHANGE THESE!)
-const GROUP_NUMBER   = 0;      // add your group number here as an integer (e.g., 2, 3)
+const GROUP_NUMBER   = 17;      // add your group number here as an integer (e.g., 2, 3)
 const BAKE_OFF_DAY   = false;  // set to 'true' before sharing during the simulation and bake-off days
 
 let PPI, PPCM;                 // pixel density (DO NOT CHANGE!)
@@ -53,9 +53,7 @@ function preload()
   // Loads the target phrases (DO NOT CHANGE!)
   phrases = loadStrings("data/phrases.txt");
   
-  // Loads UI elements for our basic keyboard
-  leftArrow = loadImage("data/left.png");
-  rightArrow = loadImage("data/right.png");
+  baseScreen = loadImage("images/base_screen.jpg");
 }
 
 // Runs once at the start
@@ -84,12 +82,14 @@ function draw()
     
     // Draws the non-interactive screen area (4x1cm) -- DO NOT CHANGE SIZE!
     noStroke();
-    fill(125);
+    fill(31, 31, 31);
     rect(width/2 - 2.0*PPCM, height/2 - 2.0*PPCM, 4.0*PPCM, 1.0*PPCM);
     textAlign(CENTER); 
     textFont("Arial", 16);
+    currently_typed = "testing123";
+    fill(255, 255, 255);
+    text(currently_typed, width/2, height/2 - 1.3 * PPCM);
     fill(0);
-    text("NOT INTERACTIVE", width/2, height/2 - 1.3 * PPCM);
 
     // Draws the touch input area (4x3cm) -- DO NOT CHANGE SIZE!
     stroke(0, 255, 0);
@@ -108,27 +108,30 @@ function draw2Dkeyboard()
   // Writes the current letter
   textFont("Arial", 24);
   fill(0);
-  text("" + current_letter, width/2, height/2); 
+  text(currently_typed, width/2, height/2); 
   
   // Draws and the left and right arrow buttons
   noFill();
   imageMode(CORNER);
-  image(leftArrow, width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE);
-  image(rightArrow, width/2, height/2, ARROW_SIZE, ARROW_SIZE);  
+
+  image(baseScreen, width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM)
 }
 
 // Evoked when the mouse button was pressed
 function mousePressed()
 {
+  let posicoes = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
   // Only look for mouse presses during the actual test
   if (draw_finger_arm)
   {                   
     // Check if mouse click happened within the touch input area
     if(mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM))  
     {      
-      // Check if mouse click was on left arrow (2D keyboard)
-      if (mouseClickWithin(width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE))
+      //Click BACK
+      if (mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 1.0*PPCM, 1.0*PPCM))
       {
+
+        
         current_letter = getPreviousChar(current_letter);
         if (current_letter.charCodeAt(0) < '_'.charCodeAt(0)) current_letter = 'z';  // wrap around to z
       }
