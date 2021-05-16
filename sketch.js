@@ -41,7 +41,19 @@ let database;                  // Firebase DB
 // 2D Keyboard UI
 let leftArrow, rightArrow;     // holds the left and right UI images for our basic 2D keyboard   
 let ARROW_SIZE;                // UI button size
-let current_letter = 'a';      // current char being displayed on our basic 2D keyboard (starts with 'a')
+let current_letter = '';      // last typed letter
+
+let xBaseScreen;
+let yBaseScreen;
+let wBaseScreen;
+let hBaseScreen;
+
+let wButton;
+let hButton;
+
+let popupImage;
+let popup = false;
+var popups;
 
 // Runs once before the setup() and loads our data (images, phrases)
 function preload()
@@ -54,11 +66,20 @@ function preload()
   phrases = loadStrings("data/phrases.txt");
   
   baseScreen = loadImage("images/base_screen.jpg");
+
+  popup_ABC = loadImage("images/popup_ABC.png");
+  popup_DEF = loadImage("images/popup_DEF.png");
+  
+  
+  popups = {
+    'ABC': popup_ABC,
+    'DEF': popup_DEF
+  };
+ 
 }
 
 // Runs once at the start
-function setup()
-{
+function setup() {
   createCanvas(700, 500);   // window size in px before we go into fullScreen()
   frameRate(60);            // frame rate (DO NOT CHANGE!)
   
@@ -69,10 +90,9 @@ function setup()
   drawUserIDScreen();       // draws the user input screen (student number and display size)
 }
 
-function draw()
-{ 
-  if(draw_finger_arm)
-  {
+function draw() { 
+
+  if(draw_finger_arm) {
     background(255);           // clear background
     noCursor();                // hides the cursor to simulate the 'fat finger'
     
@@ -84,77 +104,109 @@ function draw()
     noStroke();
     fill(31, 31, 31);
     rect(width/2 - 2.0*PPCM, height/2 - 2.0*PPCM, 4.0*PPCM, 1.0*PPCM);
+    
     textAlign(CENTER); 
     textFont("Arial", 16);
-    currently_typed = "testing123";
     fill(255, 255, 255);
-    text(currently_typed, width/2, height/2 - 1.3 * PPCM);
+    text(currently_typed.split(" ").pop(), width/2, height/2 - 1.3 * PPCM);
+
     fill(0);
 
     // Draws the touch input area (4x3cm) -- DO NOT CHANGE SIZE!
     stroke(0, 255, 0);
     noFill();
-    rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM);
+    rect(xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen);
 
     draw2Dkeyboard();       // draws our basic 2D keyboard UI
+    
+    /*
+    fill(125);
+    rect(xBaseScreen, yBaseScreen, wBaseScreen/3, hBaseScreen/3);
+    rect(xBaseScreen + 4/3*PPCM, yBaseScreen, wBaseScreen/3, hBaseScreen/3);
+    rect(xBaseScreen + 8/3*PPCM, yBaseScreen, wBaseScreen/3, hBaseScreen/3);
+
+    rect(xBaseScreen, yBaseScreen + 1.0*PPCM, wBaseScreen/3, hBaseScreen/3);
+    rect(xBaseScreen + 4/3*PPCM, yBaseScreen + 1.0*PPCM , wBaseScreen/3, hBaseScreen/3);
+    rect(xBaseScreen + 8/3*PPCM, yBaseScreen + 1.0*PPCM , wBaseScreen/3, hBaseScreen/3);
+
+    rect(xBaseScreen, yBaseScreen + 2.0*PPCM, wBaseScreen/3, hBaseScreen/3);
+    rect(xBaseScreen + 4/3*PPCM, yBaseScreen + 2.0*PPCM, wBaseScreen/3, hBaseScreen/3);
+    rect(xBaseScreen + 8/3*PPCM, yBaseScreen + 2.0*PPCM, wBaseScreen/3, hBaseScreen/3);
+    noFill();
+    */
+
+    if (popup) {
+      fill(0, 0, 0, 100);
+      rect(xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen);
+      noFill();
+
+      imageMode(CORNER);
+      image(popupImage, xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen);
+
+      circle(xBaseScreen + wBaseScreen/2, yBaseScreen + hBaseScreen/2, 2.5 * PPCM);
+    }
 
     drawFatFinger();        // draws the finger that simulates the 'fat finger' problem
   }
 }
 
-// Draws 2D keyboard UI (current letter and left and right arrows)
-function draw2Dkeyboard()
-{
-  // Writes the current letter
-  textFont("Arial", 24);
-  fill(0);
-  text(currently_typed, width/2, height/2); 
-  
-  // Draws and the left and right arrow buttons
+// Draws 2D keyboard UI 
+function draw2Dkeyboard() {
   noFill();
   imageMode(CORNER);
+  image(baseScreen, xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen)
+}
 
-  image(baseScreen, width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM)
+// Transforms mouse coordinates into the button clicked 
+function mouseClickButton() {
+  let x = floor((mouseX - xBaseScreen) / wButton);
+  let y = floor((mouseY - yBaseScreen) / hButton);
+  
+  buttons = [
+    ['back', 'ABC', 'DEF'],
+    ['GHIJ', 'KLMN', 'OPQR'],
+    ['STUV', 'space', 'WXYZ']
+  ];
+  
+  return buttons[y][x];
+}
+
+function openPopup(choices) {
+  // abrir imagem popup_$choices
+  popupImage = popups[choices];
+  popup = true;
 }
 
 // Evoked when the mouse button was pressed
-function mousePressed()
-{
-  let posicoes = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+function mousePressed() {
   // Only look for mouse presses during the actual test
-  if (draw_finger_arm)
-  {                   
+  if (draw_finger_arm) {                   
     // Check if mouse click happened within the touch input area
-    if(mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM))  
-    {      
-      //Click BACK
-      if (mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 1.0*PPCM, 1.0*PPCM))
-      {
+    if(mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM)){
+      if(!popup) {
+        switch( c = mouseClickButton() ) {
+          case 'back': // delete last character typed
+            if (currently_typed.length > 0) {
+              currently_typed = currently_typed.substring(0, currently_typed.length - 1);
+            }
+            break;
+            
+          case 'space':
+            currently_typed += " ";
+            break;
 
+          default:
+            openPopup(c);
+            break;
+        } 
         
-        current_letter = getPreviousChar(current_letter);
-        if (current_letter.charCodeAt(0) < '_'.charCodeAt(0)) current_letter = 'z';  // wrap around to z
-      }
-      // Check if mouse click was on right arrow (2D keyboard)
-      else if (mouseClickWithin(width/2, height/2, ARROW_SIZE, ARROW_SIZE))
-      {
-        current_letter = getNextChar(current_letter);
-        if (current_letter.charCodeAt(0) > 'z'.charCodeAt(0)) current_letter = '_'; // wrap back to space (i.e., the underscore)
-      }
-      else
-      {
-        // Click in whitespace indicates a character input (2D keyboard)
-        if (current_letter == '_') currently_typed += " ";                          // if underscore, consider that a space bar
-        else if (current_letter == '`' && currently_typed.length > 0)               // if `, treat that as delete
-          currently_typed = currently_typed.substring(0, currently_typed.length - 1);
-        else if (current_letter != '`') currently_typed += current_letter;          // if not any of the above cases, add the current letter to the entered phrase
+      } else {
+        popup = false;
       }
     }
-    
     // Check if mouse click happened within 'ACCEPT' 
     // (i.e., submits a phrase and completes a trial)
-    else if (mouseClickWithin(width/2 - 2*PPCM, height/2 - 5.1*PPCM, 4.0*PPCM, 2.0*PPCM))
-    {
+    else if (mouseClickWithin(width/2 - 2*PPCM, height/2 - 5.1*PPCM, 4.0*PPCM, 2.0*PPCM)) {
       // Saves metrics for the current trial
       letters_expected += target_phrase.trim().length;
       letters_entered += currently_typed.trim().length;
@@ -165,14 +217,11 @@ function mousePressed()
       current_trial++;
 
       // Check if the user has one more trial/phrase to go
-      if (current_trial < 2)                                           
-      {
+      if (current_trial < 2) {
         // Prepares for new trial
         currently_typed = "";
         target_phrase = phrases[current_trial];  
-      }
-      else
-      {
+      } else {
         // The user has completed both phrases for one attempt
         draw_finger_arm = false;
         attempt_end_time = millis();
@@ -181,8 +230,7 @@ function mousePressed()
         attempt++;
 
         // Check if the user is about to start their second attempt
-        if (attempt < 2)
-        {
+        if (attempt < 2) {
           second_attempt_button = createButton('START 2ND ATTEMPT');
           second_attempt_button.mouseReleased(startSecondAttempt);
           second_attempt_button.position(width/2 - second_attempt_button.size().width/2, height/2 + 200);
@@ -193,8 +241,7 @@ function mousePressed()
 }
 
 // Resets variables for second attempt
-function startSecondAttempt()
-{
+function startSecondAttempt() {
   // Re-randomize the trial order (DO NOT CHANG THESE!)
   shuffle(phrases, true);
   current_trial        = 0;
@@ -207,7 +254,7 @@ function startSecondAttempt()
   currently_typed      = "";
   CPS                  = 0;
   
-  current_letter       = 'a';
+  current_letter       = '';
   
   // Show the watch and keyboard again
   second_attempt_button.remove();
@@ -216,8 +263,7 @@ function startSecondAttempt()
 }
 
 // Print and save results at the end of 2 trials
-function printAndSavePerformance()
-{
+function printAndSavePerformance() {
   // DO NOT CHANGE THESE
   let attempt_duration = (attempt_end_time - attempt_start_time) / 60000;          // 60K is number of milliseconds in minute
   let wpm              = (letters_entered / 5.0) / attempt_duration;      
@@ -237,8 +283,7 @@ function printAndSavePerformance()
   
   // For each trial/phrase
   let h = 20;
-  for(i = 0; i < 2; i++, h += 40 ) 
-  {
+  for(i = 0; i < 2; i++, h += 40 ) {
     text("Target phrase " + (i+1) + ": " + phrases[i], width / 2, height / 2 + h);
     text("User typed " + (i+1) + ": " + entered[i], width / 2, height / 2 + h+20);
   }
@@ -249,8 +294,7 @@ function printAndSavePerformance()
   text("WPM with penalty: " + wpm_w_penalty.toFixed(2), width / 2, height / 2 + h+80);
 
   // Saves results (DO NOT CHANGE!)
-  let attempt_data = 
-  {
+  let attempt_data = {
         project_from:         GROUP_NUMBER,
         assessed_by:          student_ID,
         attempt_completed_by: timestamp,
@@ -264,11 +308,9 @@ function printAndSavePerformance()
   }
   
   // Send data to DB (DO NOT CHANGE!)
-  if (BAKE_OFF_DAY)
-  {
+  if (BAKE_OFF_DAY) {
     // Access the Firebase DB
-    if (attempt === 0)
-    {
+    if (attempt === 0) {
       firebase.initializeApp(firebaseConfig);
       database = firebase.database();
     }
@@ -280,8 +322,7 @@ function printAndSavePerformance()
 }
 
 // Is invoked when the canvas is resized (e.g., when we go fullscreen)
-function windowResized()
-{
+function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   let display    = new Display({ diagonal: display_size }, window.screen);
   
@@ -294,6 +335,15 @@ function windowResized()
   ARM_HEIGHT    = (int)(11.2 * PPCM);
   
   ARROW_SIZE    = (int)(2.2 * PPCM);
+
+  //Base Screen info
+  xBaseScreen = width/2 - 2.0*PPCM;
+  yBaseScreen = height/2 - 1.0*PPCM;
+  wBaseScreen = 4.0*PPCM;
+  hBaseScreen = 3.0*PPCM;
+
+  wButton = wBaseScreen/3;
+  hButton = hBaseScreen/3;
   
   // Starts drawing the watch immediately after we go fullscreen (DO NO CHANGE THIS!)
   draw_finger_arm = true;
