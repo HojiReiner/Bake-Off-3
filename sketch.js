@@ -85,7 +85,9 @@ function preload()
     'stuv': popup_STUV,
     'wxyz': popup_WXYZ
   };
- 
+  
+  // Loads sounds
+  keypress = loadSound('sounds/keypress.mp3');
 }
 
 // Runs once at the start
@@ -183,11 +185,15 @@ function mousePressed() {
           case 'back': // delete last character typed
             if (currently_typed.length > 0) {
               currently_typed = currently_typed.substring(0, currently_typed.length - 1);
+              keypress.stop();
+			        keypress.play();
             }
             break;
             
           case 'space':
             currently_typed += " ";
+            keypress.stop();
+			      keypress.play();
             break;
 
           default:
@@ -231,7 +237,8 @@ function mousePressed() {
             popup = false;
           }
 
-          print(ang);
+          keypress.stop();
+			    keypress.play();
 
         } else {
           popup = false;
