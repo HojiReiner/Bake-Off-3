@@ -7,7 +7,7 @@
 
 // Database (CHANGE THESE!)
 const GROUP_NUMBER   = 17;      // add your group number here as an integer (e.g., 2, 3)
-const BAKE_OFF_DAY   = false;  // set to 'true' before sharing during the simulation and bake-off days
+const BAKE_OFF_DAY   = false;  // set to 'true' before sharing during the simulation and bake-off day
 
 let PPI, PPCM;                 // pixel density (DO NOT CHANGE!)
 let second_attempt_button;     // button that starts the second attempt (DO NOT CHANGE!)
@@ -53,6 +53,7 @@ let hButton;
 
 let popupImage;
 let popup = false;
+let choice = "";
 var popups;
 
 // Runs once before the setup() and loads our data (images, phrases)
@@ -67,13 +68,22 @@ function preload()
   
   baseScreen = loadImage("images/base_screen.jpg");
 
-  popup_ABC = loadImage("images/popup_ABC.png");
-  popup_DEF = loadImage("images/popup_DEF.png");
-  
-  
+  popup_ABC = loadImage("images/popup_ABC .png");
+  popup_DEF = loadImage("images/popup_DEF .png");
+  popup_GHIJ = loadImage("images/popup_GHIJ.png");
+  popup_KLMN = loadImage("images/popup_KLMN.png");
+  popup_OPQR = loadImage("images/popup_OPQR.png");
+  popup_STUV = loadImage("images/popup_STUV.png");
+  popup_WXYZ = loadImage("images/popup_WXYZ.png");
+
   popups = {
-    'ABC': popup_ABC,
-    'DEF': popup_DEF
+    'abc ': popup_ABC,
+    'def ': popup_DEF,
+    'ghij': popup_GHIJ,
+    'klmn': popup_KLMN,
+    'opqr': popup_OPQR,
+    'stuv': popup_STUV,
+    'wxyz': popup_WXYZ
   };
  
 }
@@ -118,22 +128,6 @@ function draw() {
     rect(xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen);
 
     draw2Dkeyboard();       // draws our basic 2D keyboard UI
-    
-    /*
-    fill(125);
-    rect(xBaseScreen, yBaseScreen, wBaseScreen/3, hBaseScreen/3);
-    rect(xBaseScreen + 4/3*PPCM, yBaseScreen, wBaseScreen/3, hBaseScreen/3);
-    rect(xBaseScreen + 8/3*PPCM, yBaseScreen, wBaseScreen/3, hBaseScreen/3);
-
-    rect(xBaseScreen, yBaseScreen + 1.0*PPCM, wBaseScreen/3, hBaseScreen/3);
-    rect(xBaseScreen + 4/3*PPCM, yBaseScreen + 1.0*PPCM , wBaseScreen/3, hBaseScreen/3);
-    rect(xBaseScreen + 8/3*PPCM, yBaseScreen + 1.0*PPCM , wBaseScreen/3, hBaseScreen/3);
-
-    rect(xBaseScreen, yBaseScreen + 2.0*PPCM, wBaseScreen/3, hBaseScreen/3);
-    rect(xBaseScreen + 4/3*PPCM, yBaseScreen + 2.0*PPCM, wBaseScreen/3, hBaseScreen/3);
-    rect(xBaseScreen + 8/3*PPCM, yBaseScreen + 2.0*PPCM, wBaseScreen/3, hBaseScreen/3);
-    noFill();
-    */
 
     if (popup) {
       fill(0, 0, 0, 100);
@@ -143,7 +137,7 @@ function draw() {
       imageMode(CORNER);
       image(popupImage, xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen);
 
-      circle(xBaseScreen + wBaseScreen/2, yBaseScreen + hBaseScreen/2, 2.5 * PPCM);
+      circle(xBaseScreen + wBaseScreen/2, yBaseScreen + hBaseScreen/2, 2.4 * PPCM);
     }
 
     drawFatFinger();        // draws the finger that simulates the 'fat finger' problem
@@ -163,9 +157,9 @@ function mouseClickButton() {
   let y = floor((mouseY - yBaseScreen) / hButton);
   
   buttons = [
-    ['back', 'ABC', 'DEF'],
-    ['GHIJ', 'KLMN', 'OPQR'],
-    ['STUV', 'space', 'WXYZ']
+    ['back', 'abc ', 'def '],
+    ['ghij', 'klmn', 'opqr'],
+    ['stuv', 'space', 'wxyz']
   ];
   
   return buttons[y][x];
@@ -175,6 +169,7 @@ function openPopup(choices) {
   // abrir imagem popup_$choices
   popupImage = popups[choices];
   popup = true;
+  choice = choices;
 }
 
 // Evoked when the mouse button was pressed
@@ -201,7 +196,46 @@ function mousePressed() {
         } 
         
       } else {
-        popup = false;
+        let distC = dist(mouseX, mouseY, xBaseScreen + wBaseScreen/2, yBaseScreen + hBaseScreen/2);
+        
+        if (distC < 1.2*PPCM){
+          distX = mouseX - (xBaseScreen + wBaseScreen/2);
+          distY = yBaseScreen + hBaseScreen/2 - mouseY;
+
+          angleMode(DEGREES);
+          let ang = atan2(distY , distX);
+          
+          let letraDireita = choice[2];
+          let letraCima = choice[0];
+          let letraEsquerda = choice[1];
+          let letraBaixo = choice[3];
+          
+          //Direita
+          if (abs(ang) < 45) {
+            currently_typed += letraDireita;
+            popup = false;
+            
+          //Cima
+          } else if (45 < ang  && ang <135) {
+            currently_typed += letraCima;
+            popup = false;
+          
+          //Esquerda
+          } else if (135 < abs(ang) && abs(ang) < 180) {
+            currently_typed +=letraEsquerda;
+            popup = false;
+            
+          //Baixo
+          } else if (letraBaixo != ' ' && -135 < ang && ang < -45) { 
+            currently_typed +=letraBaixo;
+            popup = false;
+          }
+
+          print(ang);
+
+        } else {
+          popup = false;
+        }
       }
     }
     // Check if mouse click happened within 'ACCEPT' 
