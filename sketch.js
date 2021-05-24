@@ -240,7 +240,7 @@ function mouseClicked() {
       //if kinda inutil mas CAGA
       if(c == choice){
         clickTime = millis();
-        if(delay <= 750){
+        if(delay <= 600){
           currently_typed = currently_typed.substring(0, currently_typed.length - 1);
         
         }else{
