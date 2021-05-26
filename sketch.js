@@ -42,7 +42,7 @@ let xBaseScreen;
 let yBaseScreen;
 let wBaseScreen;
 let hBaseScreen;
-var baseScreenElement;
+let baseScreen;
 
 let wButton;
 let hButton;
@@ -54,7 +54,9 @@ let currentLetter = '';
 let letterPos = 0;
 
 let autocompleteWords = [];
-let completeWord = ["","",""];
+let completeWord = ["", "", ""];
+
+let screen1 = true;
 
 // Runs once before the setup() and loads our data (images, phrases)
 function preload() {
@@ -67,10 +69,13 @@ function preload() {
 
   autocompleteWords = loadStrings("data/palavras.txt");
 
-  baseScreen = loadImage("images/base_screen.jpg");
+  baseScreen1 = loadImage("images/qwerty1.jpg");
+  baseScreen2 = loadImage("images/qwerty2.jpg");
+
+  baseScreen = baseScreen1;
 
   // Loads sounds
-  //keypress = loadSound('sounds/keypress.mp3');
+  keypress = loadSound('sounds/keypress.mp3');
 }
 
 // Runs once at the start
@@ -89,55 +94,68 @@ function setup() {
     preventDefault: true
   };
 
-  /*
-  baseScreenElement = createElement("body", "WatchScreen");
-  baseScreenElement.position(xBaseScreen, yBaseScreen);
-  baseScreenElement.size(wBaseScreen,hBaseScreen);
-  */
-  
   // document.body registers gestures anywhere on the page
   var hammer = new Hammer(document.body, options);
   hammer.get('swipe').set({
     direction: Hammer.DIRECTION_ALL
   });
-  
+
   hammer.on("swipe", swiped);
 
 }
 
 // Hammer swipe event
 function swiped(event) {
-  
+
   let x = event.changedPointers[0].screenX - event.deltaX;
   let y = event.changedPointers[0].screenY - event.deltaY;
 
   hasSwiped = true;
   // SWIPE UP - AUTOCOMPLETE
   if (event.direction == 8 && completeWord != "") {
-    if(x < xBaseScreen || x>xBaseScreen + wBaseScreen){
+    if (x < xBaseScreen || x > xBaseScreen + wBaseScreen) {
       return;
     }
 
-    if(x> xBaseScreen && x< xBaseScreen + 4/3 * PPCM){
+    if (x > xBaseScreen && x < xBaseScreen + 4 / 3 * PPCM) {
       currently_typed += completeWord[0].substring(currently_typed.split(" ").pop().length) + " ";
-      completeWord = ["","",""];
-    }else if(x> xBaseScreen + 4/3 * PPCM && x< xBaseScreen + 8/3 * PPCM){
+      completeWord = ["", "", ""];
+    } else if (x > xBaseScreen + 4 / 3 * PPCM && x < xBaseScreen + 8 / 3 * PPCM) {
       currently_typed += completeWord[1].substring(currently_typed.split(" ").pop().length) + " ";
-      completeWord = ["","",""];
-    }else if(x> xBaseScreen + 8/3 * PPCM && x< xBaseScreen + 12/3 * PPCM){
+      completeWord = ["", "", ""];
+    } else if (x > xBaseScreen + 8 / 3 * PPCM && x < xBaseScreen + 12 / 3 * PPCM) {
       currently_typed += completeWord[2].substring(currently_typed.split(" ").pop().length) + " ";
-      completeWord = ["","",""];
+      completeWord = ["", "", ""];
     }
-    
+
   }
 
-  // SWIPE LEFT - BACK
-  if (event.direction == 2 && currently_typed.length > 0) {
-    if(y< yBaseScreen || y>yBaseScreen + hBaseScreen){
+  // SWIPE LEFT
+  if (event.direction == 2) {
+    if (y < yBaseScreen || y > yBaseScreen + hBaseScreen) {
       return;
     }
-    currently_typed = currently_typed.substring(0, currently_typed.length - 1);
-    autocomplete();
+    screen1 = !screen1;
+    if (screen1) {
+      baseScreen = baseScreen1;
+
+    } else {
+      baseScreen = baseScreen2;
+    }
+  }
+
+  // SWIPE RIGHT 
+  if (event.direction == 4) {
+    if (y < yBaseScreen || y > yBaseScreen + hBaseScreen) {
+      return;
+    }
+    screen1 = !screen1;
+    if (screen1) {
+      baseScreen = baseScreen1;
+
+    } else {
+      baseScreen = baseScreen2;
+    }
   }
 }
 
@@ -159,12 +177,19 @@ function draw() {
     textFont("Arial", 12);
     fill(255, 255, 255);
 
-    textAlign(CENTER);
+    textAlign(CENTER, CENTER);
 
-    text(currently_typed.split(" ").pop(), width / 2, height / 2 - 1.6 * PPCM);
-    text(completeWord[0] , width / 2 - 1.0*PPCM, height / 2 - 1.2 * PPCM);
-    text(completeWord[1] , width / 2, height / 2 - 1.2 * PPCM);
-    text(completeWord[2] , width / 2 + 1.0*PPCM, height / 2 - 1.2 * PPCM);
+    let i = 0;
+    for (let c of completeWord){
+  
+      if (c.length > 8) {
+        c = c.substring(0,ceil(c.length/2)) + "-\n-" + c.substring(ceil(c.length/2));
+      }
+
+      text(c, width / 2 - (1.2 - i * 1.3) * PPCM, height / 2 - 1.45 * PPCM);
+
+      i++;
+    }
 
     fill(0);
 
@@ -177,37 +202,11 @@ function draw() {
 
     fill(0);
     textFont("Arial", 25);
-    text("Swipe Up for autocomplete", width/2,  8 * height/10);
-    text("Swipe Left to delete letter", width/2, 8 * height/10 + 30);
-
-    /*
-    fill(130);
-    let n = 4;
-    rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 4/n)*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 8/n)*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 12/n)*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 16/n)*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    
-
-    rect(width/2 - 2.0*PPCM, height/2 , (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 4/n)*PPCM, height/2 , (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 8/n)*PPCM, height/2 , (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 12/n)*PPCM, height/2 , (4/n)*PPCM, 1.0*PPCM);
-    
-
-    rect(width/2 - 2.0*PPCM, height/2 + 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 4/n)*PPCM, height/2 + 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 8/n)*PPCM, height/2 + 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    rect(width/2 + (-2.0 + 12/n)*PPCM, height/2 + 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
-    
-  
-    noFill();
-    */
-
+    text("Swipe Up for autocomplete", width / 2, 8 * height / 10);
+    text("Swipe Left to delete letter", width / 2, 8 * height / 10 + 30);
 
     drawFatFinger();        // draws the finger that simulates the 'fat finger' problem
-  
+
   }
 }
 
@@ -218,7 +217,7 @@ function draw2Dkeyboard() {
   image(baseScreen, xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen)
 }
 
-function autocomplete(){
+function autocomplete() {
   //Autocomplete
   let word = currently_typed.split(" ").pop();
   let i = 0;
@@ -230,9 +229,9 @@ function autocomplete(){
 
     let prefix = c.substring(0, word.length);
     if (prefix == word) {
-      completeWord[i] = c.substring(word.length);;
+      completeWord[i] = c;
       i++
-      if(i == 3){
+      if (i == 3) {
         break;
       }
     }
@@ -245,11 +244,21 @@ function mouseClickButton() {
   let x = floor((mouseX - xBaseScreen) / wButton);
   let y = floor((mouseY - yBaseScreen) / hButton);
 
-  buttons = [
-    ['space', 'abc', 'def'],
-    ['ghi', 'jkl', 'mno'],
-    ['pqrs', 'tuv', 'wxyz']
-  ];
+  if (screen1) {
+    buttons = [
+      ['q', 'w', 'e', 'r', 't'],
+      ['a', 's', 'd', 'f', 'g'],
+      ['z', 'x', 'c', 'v', 'b'],
+      ['back', 'back', 'space', 'space', 'space']
+    ];
+  } else {
+    buttons = [
+      ['y', 'u', 'i', 'o', 'p'],
+      ['h', 'j', 'k', 'l', ''],
+      ['n', 'm', '', '', ''],
+      ['back', 'back', 'space', 'space', 'space']
+    ];
+  }
 
   return buttons[y][x];
 }
@@ -272,47 +281,26 @@ function mouseClicked() {
         case 'back': // delete last character typed
           if (currently_typed.length > 0) {
             currently_typed = currently_typed.substring(0, currently_typed.length - 1);
-            //keypress.stop();
-            //keypress.play();
+            keypress.stop();
+            keypress.play();
           }
           break;
 
 
         case 'space':
           currently_typed += " ";
-          completeWord = ["","",""];
-          //keypress.stop();
-          //keypress.play();
+          completeWord = ["", "", ""];
+          keypress.stop();
+          keypress.play();
           break;
 
 
         default:
-          if(c != choice){
-            choice = c;
-            clickTime = millis();
-            letterPos = 0;
-            delay = 1000;
-          }
+          currently_typed += c;
+          keypress.stop();
+          keypress.play();
           break;
       }
-
-      //if kinda inutil mas CAGA
-      if(c == choice){
-        clickTime = millis();
-        if(delay <= 600){
-          currently_typed = currently_typed.substring(0, currently_typed.length - 1);
-        
-        }else{
-          letterPos = 0;
-        }
-        currently_typed += c.charAt(letterPos);
-        letterPos++;
-        if(letterPos >= c.length){
-          letterPos = 0;
-        }
-
-      }
-
       autocomplete();
     }
     // Check if mouse click happened within 'ACCEPT' 
@@ -456,8 +444,8 @@ function windowResized() {
   wBaseScreen = 4.0 * PPCM;
   hBaseScreen = 3.0 * PPCM;
 
-  wButton = wBaseScreen / 3;
-  hButton = hBaseScreen / 3;
+  wButton = wBaseScreen / 5;
+  hButton = hBaseScreen / 4;
 
   // Starts drawing the watch immediately after we go fullscreen (DO NO CHANGE THIS!)
   draw_finger_arm = true;
