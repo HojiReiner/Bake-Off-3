@@ -38,10 +38,6 @@ let letters_expected = 0;      // running number of letters expected (from targe
 let errors = 0;      // a running total of the number of errors (when hitting 'ACCEPT')
 let database;                  // Firebase DB
 
-// 2D Keyboard UI
-let leftArrow, rightArrow;     // holds the left and right UI images for our basic 2D keyboard   
-let ARROW_SIZE;                // UI button sizeer
-
 let xBaseScreen;
 let yBaseScreen;
 let wBaseScreen;
@@ -57,8 +53,8 @@ let clickTime = 0;
 let currentLetter = '';
 let letterPos = 0;
 
-let autocomplete = [];
-let completeWord = "";
+let autocompleteWords = [];
+let completeWord = ["","",""];
 
 // Runs once before the setup() and loads our data (images, phrases)
 function preload() {
@@ -69,7 +65,7 @@ function preload() {
   // Loads the target phrases (DO NOT CHANGE!)
   phrases = loadStrings("data/phrases.txt");
 
-  autocomplete = loadStrings("data/palavras.txt");
+  autocompleteWords = loadStrings("data/palavras.txt");
 
   baseScreen = loadImage("images/base_screen.jpg");
 
@@ -121,8 +117,18 @@ function swiped(event) {
     if(x < xBaseScreen || x>xBaseScreen + wBaseScreen){
       return;
     }
-    currently_typed += completeWord.substring(currently_typed.split(" ").pop().length) + " ";
-    completeWord = "";
+
+    if(x> xBaseScreen && x< xBaseScreen + 4/3 * PPCM){
+      currently_typed += completeWord[0].substring(currently_typed.split(" ").pop().length) + " ";
+      completeWord = ["","",""];
+    }else if(x> xBaseScreen + 4/3 * PPCM && x< xBaseScreen + 8/3 * PPCM){
+      currently_typed += completeWord[1].substring(currently_typed.split(" ").pop().length) + " ";
+      completeWord = ["","",""];
+    }else if(x> xBaseScreen + 8/3 * PPCM && x< xBaseScreen + 12/3 * PPCM){
+      currently_typed += completeWord[2].substring(currently_typed.split(" ").pop().length) + " ";
+      completeWord = ["","",""];
+    }
+    
   }
 
   // SWIPE LEFT - BACK
@@ -131,6 +137,7 @@ function swiped(event) {
       return;
     }
     currently_typed = currently_typed.substring(0, currently_typed.length - 1);
+    autocomplete();
   }
 }
 
@@ -149,11 +156,15 @@ function draw() {
     fill(31, 31, 31);
     rect(width / 2 - 2.0 * PPCM, height / 2 - 2.0 * PPCM, 4.0 * PPCM, 1.0 * PPCM);
 
-    textAlign(CENTER);
-    textFont("Arial", 16);
+    textFont("Arial", 12);
     fill(255, 255, 255);
 
-    text(completeWord, width / 2, height / 2 - 1.3 * PPCM);
+    textAlign(CENTER);
+
+    text(currently_typed.split(" ").pop(), width / 2, height / 2 - 1.6 * PPCM);
+    text(completeWord[0] , width / 2 - 1.0*PPCM, height / 2 - 1.2 * PPCM);
+    text(completeWord[1] , width / 2, height / 2 - 1.2 * PPCM);
+    text(completeWord[2] , width / 2 + 1.0*PPCM, height / 2 - 1.2 * PPCM);
 
     fill(0);
 
@@ -169,6 +180,32 @@ function draw() {
     text("Swipe Up for autocomplete", width/2,  8 * height/10);
     text("Swipe Left to delete letter", width/2, 8 * height/10 + 30);
 
+    /*
+    fill(130);
+    let n = 4;
+    rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 4/n)*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 8/n)*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 12/n)*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 16/n)*PPCM, height/2 - 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    
+
+    rect(width/2 - 2.0*PPCM, height/2 , (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 4/n)*PPCM, height/2 , (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 8/n)*PPCM, height/2 , (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 12/n)*PPCM, height/2 , (4/n)*PPCM, 1.0*PPCM);
+    
+
+    rect(width/2 - 2.0*PPCM, height/2 + 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 4/n)*PPCM, height/2 + 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 8/n)*PPCM, height/2 + 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    rect(width/2 + (-2.0 + 12/n)*PPCM, height/2 + 1.0*PPCM, (4/n)*PPCM, 1.0*PPCM);
+    
+  
+    noFill();
+    */
+
+
     drawFatFinger();        // draws the finger that simulates the 'fat finger' problem
   
   }
@@ -180,6 +217,28 @@ function draw2Dkeyboard() {
   imageMode(CORNER);
   image(baseScreen, xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen)
 }
+
+function autocomplete(){
+  //Autocomplete
+  let word = currently_typed.split(" ").pop();
+  let i = 0;
+
+  for (let c of autocompleteWords) {
+    if (c.length < word.length) {
+      continue;
+    }
+
+    let prefix = c.substring(0, word.length);
+    if (prefix == word) {
+      completeWord[i] = c.substring(word.length);;
+      i++
+      if(i == 3){
+        break;
+      }
+    }
+  }
+}
+
 
 // Transforms mouse coordinates into the button clicked 
 function mouseClickButton() {
@@ -221,7 +280,7 @@ function mouseClicked() {
 
         case 'space':
           currently_typed += " ";
-          completeWord = "";
+          completeWord = ["","",""];
           //keypress.stop();
           //keypress.play();
           break;
@@ -254,22 +313,7 @@ function mouseClicked() {
 
       }
 
-      //Autocomplete
-      let word = currently_typed.split(" ").pop();
-
-      for (let c of autocomplete) {
-        if (c.length < word.length) {
-          continue;
-        }
-
-        let prefix = c.substring(0, word.length);
-        if (prefix == word) {
-          completeWord = c;
-          print("Complete Word : ", completeWord);
-          break;
-        }
-      }
-
+      autocomplete();
     }
     // Check if mouse click happened within 'ACCEPT' 
     // (i.e., submits a phrase and completes a trial)
