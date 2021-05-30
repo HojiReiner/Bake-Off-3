@@ -52,11 +52,18 @@ let hasSwiped = false;
 let clickTime = 0;
 let currentLetter = '';
 let letterPos = 0;
+let tutorial;
 
 let autocompleteWords = [];
 let completeWord = ["", "", ""];
 
 let screen1 = true;
+
+let xHighlight = 0;
+let yHighlight = 0;
+let wHighlight = 0;
+let highlightStart;
+let highlightFinish;
 
 // Runs once before the setup() and loads our data (images, phrases)
 function preload() {
@@ -71,6 +78,7 @@ function preload() {
 
   baseScreen1 = loadImage("images/qwerty1.jpg");
   baseScreen2 = loadImage("images/qwerty2.jpg");
+  tutorialImage = loadImage("images/tutorial.png")
 
   baseScreen = baseScreen1;
 
@@ -102,6 +110,8 @@ function setup() {
 
   hammer.on("swipe", swiped);
 
+  button = createButton('click me');
+  button.mousePressed(startFirstAttempt);
 }
 
 // Hammer swipe event
@@ -120,12 +130,18 @@ function swiped(event) {
     if (x > xBaseScreen && x < xBaseScreen + 4 / 3 * PPCM) {
       currently_typed += completeWord[0].substring(currently_typed.split(" ").pop().length) + " ";
       completeWord = ["", "", ""];
+      keypress.stop();
+      keypress.play();
     } else if (x > xBaseScreen + 4 / 3 * PPCM && x < xBaseScreen + 8 / 3 * PPCM) {
       currently_typed += completeWord[1].substring(currently_typed.split(" ").pop().length) + " ";
       completeWord = ["", "", ""];
+      keypress.stop();
+      keypress.play();
     } else if (x > xBaseScreen + 8 / 3 * PPCM && x < xBaseScreen + 12 / 3 * PPCM) {
       currently_typed += completeWord[2].substring(currently_typed.split(" ").pop().length) + " ";
       completeWord = ["", "", ""];
+      keypress.stop();
+      keypress.play();
     }
 
   }
@@ -171,7 +187,7 @@ function draw() {
 
     // Draws the non-interactive screen area (4x1cm) -- DO NOT CHANGE SIZE!
     noStroke();
-    fill(31, 31, 31);
+    fill(35, 35, 35);
     rect(width / 2 - 2.0 * PPCM, height / 2 - 2.0 * PPCM, 4.0 * PPCM, 1.0 * PPCM);
 
     textFont("Arial", 12);
@@ -194,21 +210,42 @@ function draw() {
     fill(0);
 
     // Draws the touch input area (4x3cm) -- DO NOT CHANGE SIZE!
-    stroke(0, 255, 0);
+    stroke(255, 255, 255);
     noFill();
     rect(xBaseScreen, yBaseScreen, wBaseScreen, hBaseScreen);
+    noStroke();
 
     draw2Dkeyboard();       // draws our basic 2D keyboard UI
+    
+    highlightFinish = millis();
 
-    fill(0);
-    textFont("Arial", 25);
-    text("Swipe Up for autocomplete", width / 2, 8 * height / 10);
-    text("Swipe Left to delete letter", width / 2, 8 * height / 10 + 30);
-
+    if (highlightFinish - highlightStart < 100) {
+      noStroke();
+      fill(0, 0, 0, 100);
+      rect(xHighlight, yHighlight, wHighlight, hButton);
+    }
+    
     drawFatFinger();        // draws the finger that simulates the 'fat finger' problem
 
   }
+
+  else if(tutorial){
+    background(0); 
+    imageMode(CENTER);
+    image(tutorialImage, width/2, 4 * height/10,12*PPCM,12*PPCM);
+    button.position(width/2, 4*height/5);
+  }
 }
+
+
+function startFirstAttempt(){
+  // Starts drawing the watch immediately after we go fullscreen (DO NO CHANGE THIS!)
+  button.remove();
+  tutorial = false;
+  draw_finger_arm = true;
+  attempt_start_time = millis();
+}
+
 
 // Draws 2D keyboard UI 
 function draw2Dkeyboard() {
@@ -260,6 +297,26 @@ function mouseClickButton() {
     ];
   }
 
+  if (buttons[y][x] != '') {
+    let size = 1;
+
+    if(buttons[y][x] == 'back'){
+      size = 2;
+      x = 0;
+      y = 3;
+    
+    }else if(buttons[y][x] == 'space'){
+      size = 3;
+      x = 2;
+      y = 3;
+    }
+    xHighlight = xBaseScreen + x * wButton
+    yHighlight = yBaseScreen + y * hButton
+    wHighlight = size * wButton;
+    highlightStart = millis();
+  }
+
+
   return buttons[y][x];
 }
 
@@ -296,6 +353,9 @@ function mouseClicked() {
 
 
         default:
+          if(c == ''){
+            break;
+          }
           currently_typed += c;
           keypress.stop();
           keypress.play();
@@ -447,7 +507,5 @@ function windowResized() {
   wButton = wBaseScreen / 5;
   hButton = hBaseScreen / 4;
 
-  // Starts drawing the watch immediately after we go fullscreen (DO NO CHANGE THIS!)
-  draw_finger_arm = true;
-  attempt_start_time = millis();
+  tutorial = true;
 }
