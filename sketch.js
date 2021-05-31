@@ -109,8 +109,8 @@ function setup() {
   });
 
   hammer.on("swipe", swiped);
-
-  button = createButton('click me');
+"
+  button = createButton("I'm ready");
   button.mousePressed(startFirstAttempt);
 }
 
