@@ -109,7 +109,7 @@ function setup() {
   });
 
   hammer.on("swipe", swiped);
-"
+
   button = createButton("I'm ready");
   button.mousePressed(startFirstAttempt);
 }
